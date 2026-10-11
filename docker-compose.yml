@@ -1,5 +1,24 @@
 services:
-    flyway:
+  db:
+    image: postgres:18.6
+    container_name: psp-db
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flyway:
     image: flyway/flyway:13.10.0
     profiles: ["tools"]
     depends_on:
@@ -12,24 +31,6 @@ services:
       FLYWAY_USER: ${POSTGRES_USER}
       FLYWAY_PASSWORD: ${POSTGRES_PASSWORD}
       FLYWAY_LOCATIONS: filesystem:/flyway/migrations
-  db:
-    image: postgres:18.6
-    container_name: psp-db
-    restart: unless-stopped
-    env_file: .env
-    environment:
-      TZ: UTC
-      PGTZ: UTC
-    ports:
-      - "127.0.0.1:5432:5432"   # only reachable from your own machine
-    volumes:
-      - pgdata:/var/lib/postgresql
-      - ./db/init:/docker-entrypoint-initdb.d:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
 
 volumes:
   pgdata:
