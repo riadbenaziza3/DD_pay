@@ -6,12 +6,20 @@ on:
     branches: [main]
 
 jobs:
-  migrations:
+  service:
+    # One job per service, each shown as its own check on pull requests.
+    # To add a service later, add its folder name to the list below.
+    name: ${{ matrix.service }}
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [wallet-service, customer-service]
 
     defaults:
       run:
-        working-directory: services/wallet-service
+        working-directory: services/${{ matrix.service }}
 
     services:
       postgres:
@@ -19,7 +27,7 @@ jobs:
         env:
           POSTGRES_USER: ci
           POSTGRES_PASSWORD: ci
-          POSTGRES_DB: wallet_test
+          POSTGRES_DB: test_db
         ports:
           - 5432:5432
         options: >-
@@ -29,10 +37,10 @@ jobs:
           --health-retries 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '21'
@@ -42,7 +50,7 @@ jobs:
         env:
           DB_HOST: localhost
           DB_PORT: 5432
-          DB_NAME: wallet_test
+          DB_NAME: test_db
           DB_USER: ci
           DB_PASSWORD: ci
         run: |
@@ -51,11 +59,14 @@ jobs:
 
       - name: Run database tests
         run: |
-          docker run --rm --network host \
-            -v "$PWD/db-tests:/tests" \
-            -e PGPASSWORD=ci \
-            postgres:18.6 \
-            psql -h localhost -U ci -d wallet_test -f /tests/ledger_tests.sql
+          for f in db-tests/*.sql; do
+            echo "=== Running $f ==="
+            docker run --rm --network host \
+              -v "$PWD/db-tests:/tests" \
+              -e PGPASSWORD=ci \
+              postgres:18.6 \
+              psql -h localhost -U ci -d test_db -f "/tests/$(basename "$f")"
+          done
 
       - name: Build Docker image
-        run: docker build -t wallet-service:ci .
+        run: docker build -t ${{ matrix.service }}:ci .
