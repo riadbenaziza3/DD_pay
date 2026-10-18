@@ -18,7 +18,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
-
   wallet-service:
     build: ./services/wallet-service
     container_name: wallet-service
@@ -35,6 +34,42 @@ services:
       TZ: UTC
     ports:
       - "127.0.0.1:8081:8080"
+  customer-db:
+    image: postgres:18.6
+    container_name: customer-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${CUSTOMER_DB_NAME}
+      POSTGRES_USER: ${CUSTOMER_DB_USER}
+      POSTGRES_PASSWORD: ${CUSTOMER_DB_PASSWORD}
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - customer-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  customer-service:
+    build: ./services/customer-service
+    container_name: customer-service
+    restart: unless-stopped
+    depends_on:
+      customer-db:
+        condition: service_healthy
+    environment:
+      DB_HOST: customer-db
+      DB_PORT: 5432
+      DB_NAME: ${CUSTOMER_DB_NAME}
+      DB_USER: ${CUSTOMER_DB_USER}
+      DB_PASSWORD: ${CUSTOMER_DB_PASSWORD}
+      TZ: UTC
+    ports:
+      - "127.0.0.1:8082:8080"
 
 volumes:
   wallet-db-data:
+  customer-db-data:
