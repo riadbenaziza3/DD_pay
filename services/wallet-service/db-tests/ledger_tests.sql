@@ -1,5 +1,5 @@
--- db/tests/ledger_tests.sql
--- Checks that the database itself enforces the money rules.
+-- services/wallet-service/db-tests/ledger_tests.sql
+-- Checks that the wallet database itself enforces the money rules.
 -- Everything runs inside one transaction and is ROLLED BACK at the end,
 -- so it is safe to run against your local database: no test data is kept.
 -- Any failure stops the script with an error (and turns CI red).
@@ -28,13 +28,15 @@ END $$;
 
 -- ---------------------------------------------------------------
 -- Test data
+--   b1 = system settlement account   b2 = active user wallet
+--   b3 = frozen user wallet          b4 = closed user wallet
+-- User IDs are plain UUIDs: users live in customer-service now.
 -- ---------------------------------------------------------------
-INSERT INTO public.users (id, phone, full_name, kyc_status)
-VALUES ('00000000-0000-0000-0000-0000000000a1', '+213555000001', 'Test User', 'verified');
-
-INSERT INTO ledger.accounts (id, owner_type, user_id, name, allow_negative) VALUES
-    ('00000000-0000-0000-0000-0000000000b1', 'system', NULL, 'TEST bank settlement', true),
-    ('00000000-0000-0000-0000-0000000000b2', 'user', '00000000-0000-0000-0000-0000000000a1', 'TEST wallet', false);
+INSERT INTO ledger.accounts (id, owner_type, user_id, name, allow_negative, status) VALUES
+    ('00000000-0000-0000-0000-0000000000b1', 'system', NULL,                                   'TEST bank settlement', true,  'active'),
+    ('00000000-0000-0000-0000-0000000000b2', 'user',   '00000000-0000-0000-0000-0000000000a1', 'TEST active wallet',   false, 'active'),
+    ('00000000-0000-0000-0000-0000000000b3', 'user',   '00000000-0000-0000-0000-0000000000a2', 'TEST frozen wallet',   false, 'frozen'),
+    ('00000000-0000-0000-0000-0000000000b4', 'user',   '00000000-0000-0000-0000-0000000000a3', 'TEST closed wallet',   false, 'closed');
 
 -- ---------------------------------------------------------------
 -- Things that MUST work
@@ -67,8 +69,22 @@ BEGIN
     RAISE NOTICE 'PASS: wallet balance computed correctly (50000 centimes)';
 END $$;
 
+DO $$
+BEGIN
+    INSERT INTO ledger.transactions (id, idempotency_key, type, amount)
+    VALUES ('00000000-0000-0000-0000-0000000000c3', 'test-credit-frozen', 'deposit', 1000);
+
+    INSERT INTO ledger.entries (transaction_id, account_id, direction, amount) VALUES
+        ('00000000-0000-0000-0000-0000000000c3', '00000000-0000-0000-0000-0000000000b1', 'debit',  1000),
+        ('00000000-0000-0000-0000-0000000000c3', '00000000-0000-0000-0000-0000000000b3', 'credit', 1000);
+
+    SET CONSTRAINTS ALL IMMEDIATE;
+    SET CONSTRAINTS ALL DEFERRED;
+    RAISE NOTICE 'PASS: frozen wallet can still receive funds';
+END $$;
+
 -- ---------------------------------------------------------------
--- Things that MUST be rejected
+-- Things that MUST be rejected: money rules
 -- ---------------------------------------------------------------
 INSERT INTO ledger.transactions (id, idempotency_key, type, amount)
 VALUES ('00000000-0000-0000-0000-0000000000c2', 'test-unbalanced', 'deposit', 1000);
@@ -96,31 +112,74 @@ SELECT pg_temp.expect_error('zero amount',
        VALUES ('test-zero', 'deposit', 0)$q$,
     '23514');
 
+-- ---------------------------------------------------------------
+-- Things that MUST be rejected: account status (V003)
+-- ---------------------------------------------------------------
+INSERT INTO ledger.transactions (id, idempotency_key, type, amount) VALUES
+    ('00000000-0000-0000-0000-0000000000c4', 'test-debit-frozen', 'transfer', 500),
+    ('00000000-0000-0000-0000-0000000000c5', 'test-credit-closed', 'deposit', 500),
+    ('00000000-0000-0000-0000-0000000000c6', 'test-debit-closed', 'transfer', 500);
+
+SELECT pg_temp.expect_error('sending money from a frozen wallet',
+    $q$INSERT INTO ledger.entries (transaction_id, account_id, direction, amount) VALUES
+       ('00000000-0000-0000-0000-0000000000c4', '00000000-0000-0000-0000-0000000000b3', 'debit',  500),
+       ('00000000-0000-0000-0000-0000000000c4', '00000000-0000-0000-0000-0000000000b2', 'credit', 500)$q$,
+    'P0001');
+
+SELECT pg_temp.expect_error('sending money to a closed wallet',
+    $q$INSERT INTO ledger.entries (transaction_id, account_id, direction, amount) VALUES
+       ('00000000-0000-0000-0000-0000000000c5', '00000000-0000-0000-0000-0000000000b1', 'debit',  500),
+       ('00000000-0000-0000-0000-0000000000c5', '00000000-0000-0000-0000-0000000000b4', 'credit', 500)$q$,
+    'P0001');
+
+SELECT pg_temp.expect_error('sending money from a closed wallet',
+    $q$INSERT INTO ledger.entries (transaction_id, account_id, direction, amount) VALUES
+       ('00000000-0000-0000-0000-0000000000c6', '00000000-0000-0000-0000-0000000000b4', 'debit',  500),
+       ('00000000-0000-0000-0000-0000000000c6', '00000000-0000-0000-0000-0000000000b2', 'credit', 500)$q$,
+    'P0001');
+
+-- ---------------------------------------------------------------
+-- Things that MUST be rejected: account structure
+-- ---------------------------------------------------------------
 SELECT pg_temp.expect_error('non-DZD currency on an account',
     $q$INSERT INTO ledger.accounts (owner_type, name, currency)
        VALUES ('system', 'TEST euro', 'EUR')$q$,
     '23514');
 
-SELECT pg_temp.expect_error('user wallet without a user',
+SELECT pg_temp.expect_error('user wallet without a user ID',
     $q$INSERT INTO ledger.accounts (owner_type, name)
        VALUES ('user', 'TEST orphan wallet')$q$,
     '23514');
 
-SELECT pg_temp.expect_error('merchant account without a merchant',
+SELECT pg_temp.expect_error('merchant account without a merchant ID',
     $q$INSERT INTO ledger.accounts (owner_type, name)
        VALUES ('merchant', 'TEST orphan merchant account')$q$,
     '23514');
 
-SELECT pg_temp.expect_error('merchant with an invalid RIB',
-    $q$INSERT INTO public.merchants (owner_user_id, legal_name, settlement_rib)
-       VALUES ('00000000-0000-0000-0000-0000000000a1', 'TEST SARL', '12345')$q$,
+SELECT pg_temp.expect_error('unknown account status',
+    $q$INSERT INTO ledger.accounts (owner_type, name, status)
+       VALUES ('system', 'TEST weird', 'sleeping')$q$,
     '23514');
 
+-- ---------------------------------------------------------------
+-- Audit log
+-- ---------------------------------------------------------------
 INSERT INTO public.audit_log (actor_type, action) VALUES ('system', 'test.event');
 
 SELECT pg_temp.expect_error('editing the audit log',
     $q$UPDATE public.audit_log SET action = 'tampered'$q$,
     'P0001');
+
+-- ---------------------------------------------------------------
+-- Users and merchants must no longer exist in the wallet database
+-- ---------------------------------------------------------------
+DO $$
+BEGIN
+    IF to_regclass('public.users') IS NOT NULL OR to_regclass('public.merchants') IS NOT NULL THEN
+        RAISE EXCEPTION 'FAIL: users/merchants tables still exist in the wallet database';
+    END IF;
+    RAISE NOTICE 'PASS: wallet database holds no users or merchants tables';
+END $$;
 
 \echo ''
 \echo '=== ALL DATABASE TESTS PASSED ==='
