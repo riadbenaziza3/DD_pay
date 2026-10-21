@@ -1,4 +1,4 @@
-package dz.ddpay.wallet_service;
+package dz.ddpay.walletservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
