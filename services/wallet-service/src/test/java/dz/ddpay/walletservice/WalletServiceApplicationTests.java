@@ -1,4 +1,4 @@
-package dz.ddpay.wallet_service;
+package dz.ddpay.walletservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -10,6 +10,10 @@
       {
         "name": "kyc-publisher",
         "description": "May send KYC events to customer-service (the eKYC service; locally the ekyc-simulator)"
+      },
+      {
+        "name": "wallet-operator",
+        "description": "May open, freeze and top up wallets in wallet-service (other PSP services only)"
       }
     ]
   },
@@ -21,8 +25,13 @@
       "publicClient": true,
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
-      "redirectUris": ["http://localhost/*", "ddpay://*"],
-      "webOrigins": ["+"]
+      "redirectUris": [
+        "http://localhost/*",
+        "ddpay://*"
+      ],
+      "webOrigins": [
+        "+"
+      ]
     },
     {
       "clientId": "ekyc-simulator",
@@ -31,6 +40,17 @@
       "publicClient": false,
       "clientAuthenticatorType": "client-secret",
       "secret": "ekyc-simulator-dev-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    },
+    {
+      "clientId": "customer-service",
+      "name": "customer-service calling other PSP services (dev secret)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "customer-service-dev-secret",
       "serviceAccountsEnabled": true,
       "standardFlowEnabled": false,
       "directAccessGrantsEnabled": false
@@ -45,7 +65,13 @@
       "firstName": "Amine",
       "lastName": "Test",
       "enabled": true,
-      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Test1234!",
+          "temporary": false
+        }
+      ]
     },
     {
       "id": "7d3c8a52-1f4e-4b6a-9c2d-5e8f0a1b2c3d",
@@ -55,13 +81,29 @@
       "firstName": "Sara",
       "lastName": "Test",
       "enabled": true,
-      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Test1234!",
+          "temporary": false
+        }
+      ]
     },
     {
       "username": "service-account-ekyc-simulator",
       "enabled": true,
       "serviceAccountClientId": "ekyc-simulator",
-      "realmRoles": ["kyc-publisher"]
+      "realmRoles": [
+        "kyc-publisher"
+      ]
+    },
+    {
+      "username": "service-account-customer-service",
+      "enabled": true,
+      "serviceAccountClientId": "customer-service",
+      "realmRoles": [
+        "wallet-operator"
+      ]
     }
   ]
 }

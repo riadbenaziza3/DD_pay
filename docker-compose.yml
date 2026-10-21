@@ -31,6 +31,8 @@ services:
       DB_NAME: ${WALLET_DB_NAME}
       DB_USER: ${WALLET_DB_USER}
       DB_PASSWORD: ${WALLET_DB_PASSWORD}
+      KEYCLOAK_ISSUER: http://localhost:8180/realms/ddpay
+      KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/ddpay/protocol/openid-connect/certs
       TZ: UTC
     ports:
       - "127.0.0.1:8081:8080"
