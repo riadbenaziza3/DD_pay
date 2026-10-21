@@ -1,4 +1,4 @@
-package dz.ddpay.customer_service;
+package dz.ddpay.customerservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
