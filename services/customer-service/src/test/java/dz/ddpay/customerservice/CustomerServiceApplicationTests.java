@@ -1,4 +1,4 @@
-package dz.ddpay.customer_service;
+package dz.ddpay.customerservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -66,10 +66,24 @@ services:
       DB_NAME: ${CUSTOMER_DB_NAME}
       DB_USER: ${CUSTOMER_DB_USER}
       DB_PASSWORD: ${CUSTOMER_DB_PASSWORD}
+      KEYCLOAK_ISSUER: http://localhost:8180/realms/ddpay
+      KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/ddpay/protocol/openid-connect/certs
       TZ: UTC
     ports:
       - "127.0.0.1:8082:8080"
-
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.0
+    container_name: keycloak
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: http://localhost:8180
+      KC_HTTP_ENABLED: "true"
+    ports:
+      - "127.0.0.1:8180:8080"
+    volumes:
+      - ./infra/keycloak:/opt/keycloak/data/import:ro
 volumes:
   wallet-db-data:
   customer-db-data:

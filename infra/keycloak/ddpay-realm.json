@@ -1,0 +1,67 @@
+{
+  "realm": "ddpay",
+  "enabled": true,
+  "displayName": "DD Pay (local dev)",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "accessTokenLifespan": 900,
+  "roles": {
+    "realm": [
+      {
+        "name": "kyc-publisher",
+        "description": "May send KYC events to customer-service (the eKYC service; locally the ekyc-simulator)"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "ddpay-app",
+      "name": "DD Pay mobile/web app (dev)",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost/*", "ddpay://*"],
+      "webOrigins": ["+"]
+    },
+    {
+      "clientId": "ekyc-simulator",
+      "name": "Stands in for the eKYC service until it is available (dev only)",
+      "enabled": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "ekyc-simulator-dev-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "id": "59b9fb4f-f422-406b-b325-d6b2b08023c3",
+      "username": "amine",
+      "email": "amine@ddpay.test",
+      "emailVerified": true,
+      "firstName": "Amine",
+      "lastName": "Test",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }]
+    },
+    {
+      "id": "7d3c8a52-1f4e-4b6a-9c2d-5e8f0a1b2c3d",
+      "username": "sara",
+      "email": "sara@ddpay.test",
+      "emailVerified": true,
+      "firstName": "Sara",
+      "lastName": "Test",
+      "enabled": true,
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }]
+    },
+    {
+      "username": "service-account-ekyc-simulator",
+      "enabled": true,
+      "serviceAccountClientId": "ekyc-simulator",
+      "realmRoles": ["kyc-publisher"]
+    }
+  ]
+}
