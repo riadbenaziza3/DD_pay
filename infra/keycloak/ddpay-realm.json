@@ -12,8 +12,8 @@
         "description": "May send KYC events to customer-service (the eKYC service; locally the ekyc-simulator)"
       },
       {
-        "name": "wallet-operator",
-        "description": "May open, freeze and top up wallets in wallet-service (other PSP services only)"
+        "name": "account-operator",
+        "description": "May open, freeze and top up accounts in account-service (other PSP services only)"
       }
     ]
   },
@@ -102,7 +102,7 @@
       "enabled": true,
       "serviceAccountClientId": "customer-service",
       "realmRoles": [
-        "wallet-operator"
+        "account-operator"
       ]
     }
   ]

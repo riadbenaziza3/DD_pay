@@ -1,36 +1,38 @@
 services:
-  wallet-db:
+  account-db:                          
     image: postgres:18.6
-    container_name: wallet-db
+    container_name: account-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${WALLET_DB_NAME}
-      POSTGRES_USER: ${WALLET_DB_USER}
-      POSTGRES_PASSWORD: ${WALLET_DB_PASSWORD}
+      POSTGRES_DB: ${ACCOUNT_DB_NAME}
+      POSTGRES_USER: ${ACCOUNT_DB_USER}
+      POSTGRES_PASSWORD: ${ACCOUNT_DB_PASSWORD}
       TZ: UTC
       PGTZ: UTC
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
-      - wallet-db-data:/var/lib/postgresql
+      - account-db-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
-  wallet-service:
-    build: ./services/wallet-service
-    container_name: wallet-service
+  account-service:
+    build: ./services/account-service
+    container_name: account-service
     restart: unless-stopped
     depends_on:
-      wallet-db:
+      account-db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
     environment:
-      DB_HOST: wallet-db
+      DB_HOST: account-db
       DB_PORT: 5432
-      DB_NAME: ${WALLET_DB_NAME}
-      DB_USER: ${WALLET_DB_USER}
-      DB_PASSWORD: ${WALLET_DB_PASSWORD}
+      DB_NAME: ${ACCOUNT_DB_NAME}
+      DB_USER: ${ACCOUNT_DB_USER}
+      DB_PASSWORD: ${ACCOUNT_DB_PASSWORD}
       KEYCLOAK_ISSUER: http://localhost:8180/realms/ddpay
       KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/ddpay/protocol/openid-connect/certs
       TZ: UTC
@@ -62,6 +64,8 @@ services:
     depends_on:
       customer-db:
         condition: service_healthy
+      keycloak:
+        condition: service_started
     environment:
       DB_HOST: customer-db
       DB_PORT: 5432
@@ -87,5 +91,5 @@ services:
     volumes:
       - ./infra/keycloak:/opt/keycloak/data/import:ro
 volumes:
-  wallet-db-data:
+  account-db-data:
   customer-db-data:

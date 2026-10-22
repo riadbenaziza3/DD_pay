@@ -17,6 +17,6 @@ param(
 $token = & "$PSScriptRoot\token.ps1" -User $From
 
 Write-Host ("{0} -> {1}: {2:N2} DZD (Idempotency-Key {3})" -f $From, $To, $Amount, $Key)
-Invoke-Api -Method Post -Uri "$WalletUrl/api/wallet/me/transfers" -Token $token `
+Invoke-Api -Method Post -Uri "$AccountUrl/api/accounts/me/transfers" -Token $token `
     -Headers @{ "Idempotency-Key" = $Key } `
     -Body @{ toUserId = $DevUsers[$To]; amountCentimes = (ConvertTo-Centimes $Amount); description = $Note }

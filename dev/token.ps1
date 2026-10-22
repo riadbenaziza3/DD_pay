@@ -2,7 +2,7 @@
 #
 #   $token = .\dev\token.ps1 -User amine                 # as a customer of the app
 #   $ekyc  = .\dev\token.ps1 -EkycSimulator              # as the eKYC service
-#   $svc   = .\dev\token.ps1 -Service customer-service   # as a PSP service (wallet-operator)
+#   $svc   = .\dev\token.ps1 -Service customer-service   # as a PSP service (account-operator)
 
 param(
     [string]$User = "amine",

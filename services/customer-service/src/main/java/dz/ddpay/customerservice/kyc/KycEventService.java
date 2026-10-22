@@ -109,7 +109,7 @@ public class KycEventService {
         log.info("KYC event {} applied: customer {} is {} / AML {} -> canTransact={}",
             event.eventId(), customer.getId(), d.kycStatus(), d.amlStatus(), canTransact);
 
-        // Step 4 of the plan: here we will also tell the wallet to open or freeze the account.
+        // Step 4 of the plan: here we will also tell account-service to open or freeze the customer's account.
         return new Outcome(Result.APPLIED, canTransact);
     }
 
