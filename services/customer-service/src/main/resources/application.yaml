@@ -32,3 +32,12 @@ management:
     web:
       exposure:
         include: health
+
+# Keeps each customer's account in account-service in line with their KYC/AML status.
+account-sync:
+  account-service-url: ${ACCOUNT_SERVICE_URL:http://localhost:8081}
+  token-uri: ${KEYCLOAK_TOKEN_URI:http://localhost:8180/realms/ddpay/protocol/openid-connect/token}
+  client-id: ${ACCOUNT_SYNC_CLIENT_ID:customer-service}
+  client-secret: ${ACCOUNT_SYNC_CLIENT_SECRET:}   # empty = sync switched off (e.g. in CI)
+  poll-delay-ms: 2000          # how often queued syncs are processed
+  reconcile-delay-ms: 300000   # safety net every 5 minutes (catches IDs expiring today)

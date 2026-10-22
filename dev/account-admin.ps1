@@ -9,7 +9,7 @@
 param(
     [Parameter(Mandatory)][ValidateSet("open", "topup", "freeze", "unfreeze", "show")]
     [string]$Action,
-    [ValidateSet("amine", "sara")]
+    [ValidateSet("amine", "sara", "karim")]
     [string]$User = "amine",
     [decimal]$Amount = 1000,
     [string]$Key = [guid]::NewGuid().ToString()

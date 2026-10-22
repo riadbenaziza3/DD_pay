@@ -4,9 +4,9 @@
 #   .\dev\transfer.ps1 -From amine -To sara -Amount 500 -Key retry-test-1   # run twice: sent only once
 
 param(
-    [ValidateSet("amine", "sara")]
+    [ValidateSet("amine", "sara", "karim")]
     [string]$From = "amine",
-    [ValidateSet("amine", "sara")]
+    [ValidateSet("amine", "sara", "karim")]
     [string]$To = "sara",
     [decimal]$Amount = 100,
     [string]$Note = "Dev transfer",

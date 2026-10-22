@@ -4,6 +4,7 @@
 $DevUsers = @{
     amine = "59b9fb4f-f422-406b-b325-d6b2b08023c3"
     sara  = "7d3c8a52-1f4e-4b6a-9c2d-5e8f0a1b2c3d"
+    karim = "3f6a1c9e-8b2d-4e5f-a7c1-0d9e8f7a6b5c"
 }
 
 $AccountUrl = "http://localhost:8081"

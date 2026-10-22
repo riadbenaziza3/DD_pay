@@ -90,6 +90,22 @@
       ]
     },
     {
+      "id": "3f6a1c9e-8b2d-4e5f-a7c1-0d9e8f7a6b5c",
+      "username": "karim",
+      "email": "karim@ddpay.test",
+      "emailVerified": true,
+      "firstName": "Karim",
+      "lastName": "Test",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Test1234!",
+          "temporary": false
+        }
+      ]
+    },
+    {
       "username": "service-account-ekyc-simulator",
       "enabled": true,
       "serviceAccountClientId": "ekyc-simulator",
