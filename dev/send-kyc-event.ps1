@@ -8,7 +8,7 @@
 #   .\dev\send-kyc-event.ps1 -User amine -KycStatus VERIFIED -EventId 11111111-1111-1111-1111-111111111111   # send twice to test duplicates
 
 param(
-    [ValidateSet("amine", "sara")]
+    [ValidateSet("amine", "sara", "karim")]
     [string]$User = "amine",
 
     [ValidateSet("PENDING", "VERIFIED", "REJECTED", "BLOCKED")]
@@ -30,6 +30,7 @@ param(
 $users = @{
     amine = @{ id = "59b9fb4f-f422-406b-b325-d6b2b08023c3"; name = "Amine Test"; phone = "0555000001"; number = "DAS000001" }
     sara  = @{ id = "7d3c8a52-1f4e-4b6a-9c2d-5e8f0a1b2c3d"; name = "Sara Test";  phone = "0555000002"; number = "DAS000002" }
+    karim = @{ id = "3f6a1c9e-8b2d-4e5f-a7c1-0d9e8f7a6b5c"; name = "Karim Test"; phone = "0555000003"; number = "DAS000003" }
 }
 $u = $users[$User]
 if (-not $Phone) { $Phone = $u.phone }

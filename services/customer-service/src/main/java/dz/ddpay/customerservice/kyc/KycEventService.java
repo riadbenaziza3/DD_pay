@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import dz.ddpay.customerservice.accountsync.AccountSyncStore;
 import dz.ddpay.customerservice.audit.AuditLog;
 import dz.ddpay.customerservice.customer.Customer;
 import dz.ddpay.customerservice.customer.CustomerRepository;
@@ -24,6 +25,9 @@ import dz.ddpay.customerservice.customer.CustomerService;
  *   - duplicates   : each eventId is processed once (processed_events table)
  *   - out of order : an event older than the last one applied is ignored ("stale")
  *   - concurrency  : the customer row is locked while the event is applied
+ *
+ * Every applied event also queues an account sync (outbox), in the same transaction:
+ * account-service is then told to open, freeze or unfreeze the customer's account.
  */
 @Service
 public class KycEventService {
@@ -38,13 +42,15 @@ public class KycEventService {
     private final CustomerService customerService;
     private final JdbcClient jdbc;
     private final AuditLog audit;
+    private final AccountSyncStore accountSync;
 
     public KycEventService(CustomerRepository customers, CustomerService customerService,
-                           JdbcClient jdbc, AuditLog audit) {
+                           JdbcClient jdbc, AuditLog audit, AccountSyncStore accountSync) {
         this.customers = customers;
         this.customerService = customerService;
         this.jdbc = jdbc;
         this.audit = audit;
+        this.accountSync = accountSync;
     }
 
     @Transactional
@@ -105,11 +111,13 @@ public class KycEventService {
 
         audit.record("system", null, "customer.kyc_synced", "customer", customer.getId(), details);
 
+        // Same transaction: if this commit succeeds, the account sync is guaranteed to happen.
+        accountSync.enqueue(customer.getId(), "kyc_event:" + event.eventId());
+
         boolean canTransact = customerService.canTransact(customer.getId());
         log.info("KYC event {} applied: customer {} is {} / AML {} -> canTransact={}",
             event.eventId(), customer.getId(), d.kycStatus(), d.amlStatus(), canTransact);
 
-        // Step 4 of the plan: here we will also tell account-service to open or freeze the customer's account.
         return new Outcome(Result.APPLIED, canTransact);
     }
 

@@ -3,7 +3,7 @@
 #   .\dev\account.ps1 -User amine
 
 param(
-    [ValidateSet("amine", "sara")]
+    [ValidateSet("amine", "sara", "karim")]
     [string]$User = "amine"
 )
 

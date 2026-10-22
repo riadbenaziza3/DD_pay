@@ -74,6 +74,9 @@ services:
       DB_PASSWORD: ${CUSTOMER_DB_PASSWORD}
       KEYCLOAK_ISSUER: http://localhost:8180/realms/ddpay
       KEYCLOAK_JWKS_URI: http://keycloak:8080/realms/ddpay/protocol/openid-connect/certs
+      ACCOUNT_SERVICE_URL: http://account-service:8080
+      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/ddpay/protocol/openid-connect/token
+      ACCOUNT_SYNC_CLIENT_SECRET: ${ACCOUNT_SYNC_CLIENT_SECRET}
       TZ: UTC
     ports:
       - "127.0.0.1:8082:8080"
