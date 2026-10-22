@@ -6,7 +6,7 @@ $DevUsers = @{
     sara  = "7d3c8a52-1f4e-4b6a-9c2d-5e8f0a1b2c3d"
 }
 
-$WalletUrl = "http://localhost:8081"
+$AccountUrl = "http://localhost:8081"
 
 # Calls an API and prints the JSON error body (code + message) instead of a bare HTTP error.
 function Invoke-Api {
